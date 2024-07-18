@@ -1,95 +1,84 @@
-//Fetching data that i will use to display on the page
-const baseUrl = 'http://localhost:3000';
 
-document.addEventListener('DOMContentLoaded', () => {
-  fetchCocktails();
-  const form = document.querySelector('#search-form');
-  form.addEventListener('submit' , (e) => {
+// Function to fetch pet data from the JSON file
+async function fetchPets() {
+  try {
+      // Fetch the JSON data from the pets.json file
+      const response = await fetch('http://localhost:3000/pets');
 
-    e.preventDefault()
-    const input = document.querySelector('#search')
-    if (input.value) {
-      fetchCocktails(input.value);
-    }
-  });
-});
-
- // Search movies form
- const form = document.querySelector("#search-form");
- form.addEventListener("submit", (e) => {
-   e.preventDefault(); // Prevent form submission
-   const searchTerm = document
-     .querySelector("#search")
-     .value.trim()
-     .toLowerCase();
-   fetchMovies(searchTerm);
- });
-
-function fetchCocktails(searchResult = '') {
-  fetch(`${baseUrl}/pets`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((response) => response.json())
-    .then((pets) => {
-     
-      document.querySelector('#cocktail').innerHTML = '';
-      
-      if (searchResult) {
-       
-
-
-         pets
-            .filter((pets) =>
-            pets.title.toLowerCase()
-                  .includes(searchResult.toLowerCase())
-            )
-     .forEach((cocktails) => renderCocktails(cocktails));
-    } else {
-        pets.forEach((pets) => renderCocktails(pets));
+      // Check if the request was successful
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
       }
-    })   
-    .catch((err) => console.log(err));
+
+      // Parse the JSON data
+      const pets = await response.json();
+
+      // Get the container where the pet cards will be displayed
+      const petsContainer = document.getElementById('pets-container');
+
+      // Function to render pet cards
+      const renderPets = (pets) => {
+          // Clear any existing content in the container
+          petsContainer.innerHTML = '';
+
+          // Iterate over the pets data and create the pet cards
+          pets.forEach(pet => {
+              const card = document.createElement('div');
+              card.className = 'pet-card';
+              card.innerHTML = `
+                  <img src="${pet.photo.full}" alt="${pet.name}">
+                  <div class="content">
+                      <h3>${pet.name}</h3>
+                      <p class="description">${pet.weight} Kg</p>
+                      <button class="adopt-button">Adopt Me</button>
+                  </div>
+              `;
+
+              // Add event listener for the "Adopt Me" button
+              const adoptButton = card.querySelector('.adopt-button');
+              adoptButton.addEventListener('click', () => {
+                  // Change the button text to "Adopted" and disable the button
+                  adoptButton.textContent = 'Adopted';
+                  adoptButton.disabled = true;
+                  adoptButton.classList.add('adopted');
+              });
+
+              petsContainer.appendChild(card);
+          });
+      };
+
+      // Initially render all pets
+      renderPets(pets);
+
+      // Add event listener for the search button
+      const searchButton = document.getElementById('search-button');
+      searchButton.addEventListener('click', () => {
+          const searchQuery = document.getElementById('search-input').value.toLowerCase();
+          const filteredPets = pets.filter(pet =>
+              pet.name.toLowerCase().includes(searchQuery)
+          );
+          renderPets(filteredPets);
+      });
+
+      // Add event listener for the theme toggle button
+      const themeToggle = document.getElementById('theme-toggle');
+      themeToggle.addEventListener('click', () => {
+          // Toggle the data-theme attribute
+          if (document.documentElement.getAttribute('data-theme') === 'dark') {
+              document.documentElement.removeAttribute('data-theme');
+              themeToggle.textContent = '🌙'; // Dark mode icon
+          } else {
+              document.documentElement.setAttribute('data-theme', 'dark');
+              themeToggle.textContent = '🌞'; // Light mode icon
+          }
+      });
+
+  } catch (error) {
+      console.error('Error fetching pets:', error);
+  }
 }
-//Function to call the data from the API
-function renderCocktails(pets) {
-  const cocktailContainer = document.querySelector('#cocktail');
-  const cocktailList = document.createElement('div');
-  cocktailList.classList.add('card')
 
-  const image = document.createElement('img');
-  image.classList.add('card-img-top', 'mt-2');
-  image.height = 200;
-  image.src = pets.photo.full;
-  // image.alt = cocktails.strDrink;
-  image.style.display = 'block';
-  image.style.unicodeBidi = 'isolate';
-
-  cocktailList.appendChild(image);
-
-  const cardBody = document.createElement('div');
-  cardBody.classList.add('card-body');
-
-  const title = document.createElement('h5');
-  title.classList.add('card-title');
-  title.textContent = pets.name;
-
-  const description = document.createElement('p');
-  description.classList.add('card-text');
-  description.textContent = pets.weight;
-
-  const button = document.createElement('button');
-  button.classList.add('btn', 'btn-primary',);
-  button.textContent = 'Adopt Me';
-
- 
-  
-  cardBody.append(title, description, button);
-  cocktailList.appendChild(cardBody);
-
-    //Calling the function to display the data on the page
-  cocktailContainer.appendChild(cocktailList);
-
-}
+// Call the fetchPets function when the DOM content is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  fetchPets();
+});
