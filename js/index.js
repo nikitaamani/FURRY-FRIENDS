@@ -3,7 +3,7 @@
 async function fetchPets() {
   try {
       // Fetch the JSON data from the pets.json file
-      const response = await fetch('http://localhost:3000/pets');
+      const response = await fetch('https://my-json-server.typicode.com/nikitaamani/FURRY-FRIENDS/pets');
 
       // Check if the request was successful
       if (!response.ok) {
